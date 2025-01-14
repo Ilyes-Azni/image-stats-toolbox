@@ -3,7 +3,7 @@ from typing import List, Set, Dict, Optional
 import os
 
 class ImageLoader:
-    def __init(
+    def __init__(
             self,
             root_path:str,
             extensions:Set[str]={".jpg", ".jpeg", ".png"},
