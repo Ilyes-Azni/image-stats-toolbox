@@ -73,3 +73,25 @@ class ImageLoader:
         
         end_idx = end_idx or len(all_paths)
         return all_paths[start_idx:end_idx]
+    
+
+# Example usage:
+"""  
+loader = ImageLoader(
+    root_path="/path/to/dataset",
+    extensions={'.jpg', '.png'},
+    recursive=True
+)
+
+# Get dataset statistics
+stats = loader.get_dataset_stats()
+
+# Get a batch of images
+batch_paths = loader.get_batch(batch_size=32)
+
+# Validate dataset
+validation_results = loader.validate_dataset()
+
+# Get specific subset
+subset = loader.get_subset(start_idx=100, end_idx=200)
+"""
