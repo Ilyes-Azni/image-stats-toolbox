@@ -1,4 +1,5 @@
 from src.utils.image_loader import ImageLoader
+from src.utils.visualisation import DatasetVisualizer
 import logging
 from pprint import pprint
 
@@ -28,3 +29,6 @@ if __name__ == "__main__":
 
     logger.info("\nDataset validation results:")
     pprint(loader.validate_dataset())
+# Visualization tool tests
+    logger.info("\nVisualizing dataset...")
+    DatasetVisualizer.viz(loader)
