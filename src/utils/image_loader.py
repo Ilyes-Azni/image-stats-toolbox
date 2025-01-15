@@ -188,3 +188,41 @@ class ImageLoader:
         }
         
         return loaders
+    def to_tensorflow(self, img_height=224, img_width=224, batch_size=32):
+        """
+        Converts ImageLoader instance to a TensorFlow dataset ready for training
+        
+        Args:
+            img_height: Target image height
+            img_width: Target image width
+            batch_size: Batch size for training
+            
+        Returns:
+            tf_dataset: TensorFlow dataset ready for model training
+            num_classes: Number of classes in the dataset
+        """
+        import tensorflow as tf
+        
+        class_names = self.get_class_names()
+        class_to_index = {name: idx for idx, name in enumerate(class_names)}
+        
+        all_images = []
+        all_labels = []
+        
+        for class_name in class_names:
+            images = self.get_images_by_class(class_name)
+            all_images.extend(images)
+            all_labels.extend([class_to_index[class_name]] * len(images))
+        
+        def load_and_preprocess(path, label):
+            img = tf.io.read_file(path)
+            img = tf.image.decode_jpeg(img, channels=3)
+            img = tf.image.resize(img, [img_height, img_width])
+            img = img / 255.0
+            return img, label
+        
+        dataset = tf.data.Dataset.from_tensor_slices((all_images, all_labels))
+        dataset = dataset.map(load_and_preprocess)
+        dataset = dataset.shuffle(1000).batch(batch_size)
+        
+        return dataset, len(class_names)
