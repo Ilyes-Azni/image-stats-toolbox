@@ -1,6 +1,9 @@
 from pathlib import Path
 from typing import List, Set, Dict, Optional
 from collections import defaultdict
+import random
+import time
+import shutil
 
 class ImageLoader:
     def __init__(
@@ -121,3 +124,67 @@ class ImageLoader:
         """Checks if file exists and has non-zero size"""
         path = Path(file_path)
         return path.exists() and path.stat().st_size > 0
+
+
+
+    def split(self, train: float = 0.8, val: float = 0.15, test: float = 0.05) -> Dict[str, 'ImageLoader']:
+        """
+        Creates new ImageLoader instances for train, validation and test sets
+        
+        Args:
+            train: Proportion of data for training (between 0 and 1)
+            val: Proportion of data for validation (between 0 and 1)
+            test: Proportion of data for test (between 0 and 1)
+            
+        Returns:
+            Dictionary containing train, val, test ImageLoader instances
+        """
+        random.seed(time.time())
+        assert abs(train + val + test - 1.0) < 1e-9, "Split proportions must sum to 1"
+        
+        # Create temporary directories for splits
+        base_path = self.root_path.parent / "splits"
+        splits_paths = {
+            'train': base_path / 'train',
+            'val': base_path / 'val',
+            'test': base_path / 'test'
+        }
+        
+        # Create directories
+        for path in splits_paths.values():
+            path.mkdir(parents=True, exist_ok=True)
+        
+        # Copy files for each split
+        for class_name, images in self.class_mapping.items():
+            shuffled_images = random.sample(images, len(images))
+            train_idx = int(len(images) * train)
+            val_idx = train_idx + int(len(images) * val)
+            
+            splits_images = {
+                'train': shuffled_images[:train_idx],
+                'val': shuffled_images[train_idx:val_idx],
+                'test': shuffled_images[val_idx:]
+            }
+            
+            # Create class directories and copy files
+            for split_name, split_images in splits_images.items():
+                class_dir = splits_paths[split_name] / class_name
+                class_dir.mkdir(exist_ok=True)
+                
+                for img_path in split_images:
+                    source = Path(img_path)
+                    target = class_dir / source.name
+                    if not target.exists():
+                        shutil.copy2(source, target)
+        
+        # Create new ImageLoader instances
+        loaders = {
+            split_name: ImageLoader(
+                root_path=str(path),
+                extensions=self.extensions,
+                recursive=self.recursive
+            )
+            for split_name, path in splits_paths.items()
+        }
+        
+        return loaders
