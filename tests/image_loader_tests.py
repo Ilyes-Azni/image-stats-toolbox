@@ -1,5 +1,6 @@
 from src.utils.image_loader import ImageLoader
 from src.utils.visualisation import DatasetVisualizer
+from src.outliers.mahalanobis import mahalanobis
 import logging
 from pprint import pprint
 
@@ -29,6 +30,14 @@ if __name__ == "__main__":
 
     logger.info("\nDataset validation results:")
     pprint(loader.validate_dataset())
-# Visualization tool tests
-    logger.info("\nVisualizing dataset...")
-    DatasetVisualizer.viz(loader)
+# Visualiz
+
+    # Outlier detection tests
+    logger.info("\nDetecting outliers...")
+    logger.debug("Creating detector...")
+    detector = mahalanobis(loader, class_name="real")
+    logger.debug("Running detection...")
+    outliers = detector.detect(threshold=2.0)
+    logger.debug("Getting outlier paths...")
+    outlier_paths = detector.get_outlier_paths()
+    logger.info(f"Outliers detected: {len(outlier_paths)}")
