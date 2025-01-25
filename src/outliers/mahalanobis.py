@@ -1,10 +1,12 @@
 # Implementation of Mahalanobis distance on image for outlier detection
 import numpy as np
+import matplotlib.pyplot as plt
 from typing import List, Dict
 from src.outliers.outlier import Outlier
 from src.utils.image_loader import ImageLoader
 from skimage import io
 from scipy.linalg import inv
+from src.utils.visualisation import DatasetVisualizer
 
 class mahalanobis(Outlier):
     def __init__(self, image_loader: ImageLoader, class_name: str = None):
@@ -68,3 +70,14 @@ class mahalanobis(Outlier):
     def get_outlier_paths(self) -> List[str]:
         """Returns the file paths of detected outlier images"""
         return [self.image_paths[i] for i in self.outlier_indices]
+    
+    def visualize_outliers(self, num_samples: int = 5):
+        """Displays a grid of detected outlier images for visual inspection"""
+        # Create a temporary ImageLoader instance just for visualization
+        temp_loader = ImageLoader(self.image_loader.root_path)
+        temp_loader.dataset_index = {"outliers": self.get_outlier_paths()}
+        temp_loader.class_mapping = {"outliers": self.get_outlier_paths()}
+        
+        # Use our existing visualization tool
+        DatasetVisualizer.viz(temp_loader, images_per_class=num_samples)
+

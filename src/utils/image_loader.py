@@ -226,3 +226,30 @@ class ImageLoader:
         dataset = dataset.shuffle(1000).batch(batch_size)
         
         return dataset, len(class_names)
+
+    def remove_outliers(self, outlier_paths: List[str], move_to: Optional[str] = None):
+        """
+        Removes outlier images from the dataset with batch validation
+        
+        Args:
+            outlier_paths: List of paths to outlier images
+            move_to: Optional path to move outliers instead of deletion
+        """
+        while True:
+            response = input(f"Proceed with removing {len(outlier_paths)} outliers? (yes/no): ").lower()
+            if response in ['yes', 'no']:
+                break
+                
+        if response == 'yes':
+            if move_to:
+                Path(move_to).mkdir(parents=True, exist_ok=True)
+                for path in outlier_paths:
+                    dest = Path(move_to) / Path(path).name
+                    shutil.move(path, dest)
+            else:
+                for path in outlier_paths:
+                    Path(path).unlink()
+                    
+            # Update dataset index and class mapping
+            self._scan_directory()
+            self.map_class_folders()

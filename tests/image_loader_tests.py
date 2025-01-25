@@ -11,6 +11,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 if __name__ == "__main__":
+    # Initial dataset loading and visualization
     logger.info("Initializing ImageLoader...")
     loader = ImageLoader(
         root_path=r"C:\Users\PC\Desktop\données\deepfake_database",
@@ -22,22 +23,42 @@ if __name__ == "__main__":
     logger.info("Available classes:")
     pprint(loader.get_class_names())
 
-    logger.info("\nClass distribution:")
-    pprint(loader.get_class_distribution())
+    logger.info("\nInitial class distribution:")
+    initial_distribution = loader.get_class_distribution()
+    pprint(initial_distribution)
 
-    logger.info("\nDetailed dataset statistics:")
-    pprint(loader.get_dataset_stats())
+    # Visualize initial dataset
+    logger.info("\nVisualizing initial dataset...")
+    DatasetVisualizer.viz(loader, images_per_class=5)
 
-    logger.info("\nDataset validation results:")
-    pprint(loader.validate_dataset())
-# Visualiz
-
-    # Outlier detection tests
+    # Outlier detection and visualization
     logger.info("\nDetecting outliers...")
-    logger.debug("Creating detector...")
-    detector = mahalanobis(loader, class_name="real")
-    logger.debug("Running detection...")
+    detector = mahalanobis(loader, class_name="df")
     outliers = detector.detect(threshold=2.0)
-    logger.debug("Getting outlier paths...")
     outlier_paths = detector.get_outlier_paths()
-    logger.info(f"Outliers detected: {len(outlier_paths)}")
+    
+    logger.info(f"Number of outliers detected: {len(outlier_paths)}")
+    
+    # Visualize detected outliers
+    logger.info("\nVisualizing detected outliers...")
+    detector.visualize_outliers(num_samples=5)
+
+    # Remove outliers and verify changes
+    logger.info("\nRemoving outliers from dataset...")
+    loader.remove_outliers(outlier_paths, move_to=r"C:\Users\PC\Desktop\données\deepfake_database\outliers_backup")
+
+    logger.info("\nUpdated class distribution after outlier removal:")
+    final_distribution = loader.get_class_distribution()
+    pprint(final_distribution)
+
+    # Show final dataset state
+    logger.info("\nVisualizing final dataset...")
+    DatasetVisualizer.viz(loader, images_per_class=5)
+
+    # Print summary of changes
+    logger.info("\nSummary of changes:")
+    for class_name in loader.get_class_names():
+        initial = initial_distribution.get(class_name, 0)
+        final = final_distribution.get(class_name, 0)
+        diff = initial - final
+        logger.info(f"{class_name}: {initial} -> {final} (removed {diff} images)")
