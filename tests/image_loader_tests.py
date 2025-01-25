@@ -1,6 +1,7 @@
 from src.utils.image_loader import ImageLoader
 from src.utils.visualisation import DatasetVisualizer
-from src.outliers.mahalanobis import mahalanobis
+from src.utils.feature_extractor import FeatureExtractor
+from src.outliers.ransacnn import RANSACNN
 import logging
 from pprint import pprint
 
@@ -31,17 +32,27 @@ if __name__ == "__main__":
     logger.info("\nVisualizing initial dataset...")
     DatasetVisualizer.viz(loader, images_per_class=5)
 
-    # Outlier detection and visualization
-    logger.info("\nDetecting outliers...")
-    detector = mahalanobis(loader, class_name="df")
-    outliers = detector.detect(threshold=2.0)
-    outlier_paths = detector.get_outlier_paths()
+    # Extract features using MobileNetV3
+    logger.info("\nExtracting features using MobileNetV3...")
+    extractor = FeatureExtractor()
+    image_paths = loader.get_images_by_class("df")
+    features = extractor.batch_extract(image_paths)
+
+    # Outlier detection using RANSACNN
+    logger.info("\nDetecting outliers using RANSACNN...")
+    detector = RANSACNN(features)
+    outliers = detector.detect(sample_ratio=0.05, threshold_iter=500)
     
+    # Get outlier paths
+    outlier_paths = [image_paths[i] for i in outliers]
     logger.info(f"Number of outliers detected: {len(outlier_paths)}")
-    
+
     # Visualize detected outliers
     logger.info("\nVisualizing detected outliers...")
-    detector.visualize_outliers(num_samples=5)
+    temp_loader = ImageLoader(loader.root_path)
+    temp_loader.dataset_index = {"outliers": outlier_paths}
+    temp_loader.class_mapping = {"outliers": outlier_paths}
+    DatasetVisualizer.viz(temp_loader, images_per_class=5)
 
     # Remove outliers and verify changes
     logger.info("\nRemoving outliers from dataset...")
