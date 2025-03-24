@@ -28,14 +28,16 @@ A powerful Python toolbox for image dataset analysis, statistics, and outlier de
 - Class distribution plots
 - Image sample viewing
 
-## Upcoming Features
-
-
 ### Speech-to-Text Annotation
 - Voice command annotation system
 - Real-time transcription
 - JSON annotation storage
 - Annotation review interface
+
+## Upcoming Features
+
+
+
 
 ### Advanced Analytics
 - Image similarity metrics
